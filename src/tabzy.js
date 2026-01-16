@@ -1,4 +1,4 @@
-function Tabzy(selector) {
+function Tabzy(selector, options = {}) {
     this.container = document.querySelector(selector);
     console.log(this.container);
     if (!this.container) {
@@ -26,14 +26,27 @@ function Tabzy(selector) {
         })
         .filter(Boolean);
     if (this.tabs.length !== this.panels.length) return;
+    console.log("Panels");
     console.log(this.panels);
 
+    this.opt = Object.assign(
+        {
+            remember: false,
+        },
+        options
+    );
     this._originalHTML = this.container.innerHTML;
     this._init();
 }
 
 Tabzy.prototype._init = function () {
-    this._activeTab(this.tabs[0]);
+    const hash = location.hash;
+    const tab =
+        (this.opt.remember &&
+            hash &&
+            this.tabs.find((tab) => tab.getAttribute("href") === hash)) ||
+        this.tabs[0];
+    this._activateTab(tab);
     this.tabs.forEach((tab) => {
         tab.onclick = (event) => {
             this._handleTabClick(event, tab);
@@ -43,10 +56,10 @@ Tabzy.prototype._init = function () {
 
 Tabzy.prototype._handleTabClick = function (event, tab) {
     event.preventDefault();
-    this._activeTab(tab);
+    this._activateTab(tab);
 };
 
-Tabzy.prototype._activeTab = function (tab) {
+Tabzy.prototype._activateTab = function (tab) {
     this.tabs.forEach((tab) => {
         tab.closest("li").classList.remove("tabzy--active");
     });
@@ -59,28 +72,31 @@ Tabzy.prototype._activeTab = function (tab) {
     const panelActive = document.querySelector(tab.getAttribute("href"));
     console.log(panelActive);
     panelActive.hidden = false;
+
+    if (this.opt.remember) {
+        history.replaceState(null, null, tab.getAttribute("href"));
+    }
 };
 
 Tabzy.prototype.switch = function (input) {
-    let tabToActive = null;
+    let tabToActivate = null;
     if (typeof input === "string") {
-        tabToActive = this.tabs.find(
+        tabToActivate = this.tabs.find(
             (tab) => tab.getAttribute("href") === input
         );
 
-        if (!tabToActive) {
+        if (!tabToActivate) {
             console.error(`Tabzy: No panel found with ID ${input}`);
             return;
         }
     } else if (this.tabs.includes(input)) {
-        tabToActive = input;
+        tabToActivate = input;
     }
 
-    if (!tabToActive) {
+    if (!tabToActivate) {
         console.log(`Tabzy: Invalid input ${input}`);
     }
-
-    this._activeTab(tabToActive);
+    this._activateTab(tabToActivate);
 };
 
 Tabzy.prototype.destroy = function () {

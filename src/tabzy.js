@@ -19,13 +19,15 @@ function Tabzy(selector, options = {}) {
             if (!panel) {
                 hasError = true;
                 console.error(
-                    `Tabzy: No panel found for tab ${tab.getAttribute("href")}`
+                    `Tabzy: No panel found for tab ${tab.getAttribute("href")}`,
                 );
             }
             return panel;
         })
         .filter(Boolean);
     if (this.tabs.length !== this.panels.length) return;
+
+    this.paramKey = selector;
     console.log("Panels");
     console.log(this.panels);
 
@@ -33,18 +35,22 @@ function Tabzy(selector, options = {}) {
         {
             remember: false,
         },
-        options
+        options,
     );
     this._originalHTML = this.container.innerHTML;
     this._init();
 }
 
 Tabzy.prototype._init = function () {
-    const hash = location.hash;
+    const params = new URLSearchParams(location.search);
+    const tabSelector = params.get(params);
+    console.log(tabSelector);
     const tab =
         (this.opt.remember &&
-            hash &&
-            this.tabs.find((tab) => tab.getAttribute("href") === hash)) ||
+            tabSelector &&
+            this.tabs.find(
+                (tab) => tab.getAttribute("href") === tabSelector,
+            )) ||
         this.tabs[0];
     this._activateTab(tab);
     this.tabs.forEach((tab) => {
@@ -74,7 +80,9 @@ Tabzy.prototype._activateTab = function (tab) {
     panelActive.hidden = false;
 
     if (this.opt.remember) {
-        history.replaceState(null, null, tab.getAttribute("href"));
+        const params = new URLSearchParams(location.search);
+        params.set(this.paramKey, tab.getAttribute("href"));
+        param.history.replaceState(null, null, `?${this.paramKey}=${params}`);
     }
 };
 
@@ -82,7 +90,7 @@ Tabzy.prototype.switch = function (input) {
     let tabToActivate = null;
     if (typeof input === "string") {
         tabToActivate = this.tabs.find(
-            (tab) => tab.getAttribute("href") === input
+            (tab) => tab.getAttribute("href") === input,
         );
 
         if (!tabToActivate) {
